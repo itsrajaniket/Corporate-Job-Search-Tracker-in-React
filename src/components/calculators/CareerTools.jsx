@@ -4,9 +4,8 @@ import TenureCalculator from "./TenureCalculator";
 import ExitDateCalculator from "./ExitDateCalculator";
 import SalaryCalculator from "./SalaryCalculator";
 import TaxCalculator from "./TaxCalculator";
-
 import CompareOffers from "./CompareOffers";
-// import FutureTool from "./FutureTool"; <-- Ready for your next addition!
+import FutureTool from "./FutureTool";
 
 export default function CareerTools() {
   return (
@@ -27,7 +26,7 @@ export default function CareerTools() {
           <ExitDateCalculator />
           <SalaryCalculator />
           <TaxCalculator />
-          {/* <FutureTool /> */}
+          <FutureTool />
           <CompareOffers />
         </div>
       </div>

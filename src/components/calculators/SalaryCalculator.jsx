@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+// src/components/calculators/SalaryCalculator.jsx
+import React, { useState, useEffect } from "react";
 import ToolCard from "./ToolCard";
+import { calculate2026Details } from "./salaryUtils";
 
 export default function SalaryCalculator() {
   const [ctcInput, setCtcInput] = useState("");
@@ -16,56 +18,19 @@ export default function SalaryCalculator() {
 
   const adjustCTC = (amount) => {
     let currentVal = parseInt(ctcInput.replace(/\D/g, "")) || 0;
-    let newVal = currentVal + amount;
-    if (newVal < 0) newVal = 0;
+    let newVal = Math.max(0, currentVal + amount);
     formatAndSetCTC(newVal);
-    // Note: To auto-calculate here like your HTML did, we use a useEffect or just let the user hit calculate.
   };
 
-  const calculateInHand = () => {
-    const ctc = parseFloat(ctcInput.replace(/\D/g, ""));
-    if (!ctc || isNaN(ctc)) {
-      setMonthlyInHand(null);
-      return;
-    }
-
-    const basic = ctc * 0.5; // Standard 50% basic
-    const gratuity = basic * 0.0481; // 4.81% gratuity component
-    const pfEmployer = Math.min(basic * 0.12, 21600); // PF capped at 1800/mo
-    const pfEmployee = pfEmployer;
-
-    // Gross salary before tax and employee PF
-    const fixedGross = ctc - pfEmployer - gratuity;
-
-    // 2026 Standard Deduction is ₹75,000
-    let taxableIncome = Math.max(0, fixedGross - 75000);
-    let tax = 0;
-
-    // REVISED 2026 SLABS: Taxable income up to 12L is tax-free
-    if (taxableIncome > 1200000) {
-      // Slab-wise calculation for income above the 12L threshold
-      if (taxableIncome > 400000)
-        tax += Math.min(400000, taxableIncome - 400000) * 0.05;
-      if (taxableIncome > 800000)
-        tax += Math.min(400000, taxableIncome - 800000) * 0.1;
-      if (taxableIncome > 1200000)
-        tax += Math.min(400000, taxableIncome - 1200000) * 0.15;
-      if (taxableIncome > 1600000)
-        tax += Math.min(400000, taxableIncome - 1600000) * 0.2;
-      if (taxableIncome > 2000000)
-        tax += Math.min(400000, taxableIncome - 2000000) * 0.25;
-      if (taxableIncome > 2400000) tax += (taxableIncome - 2400000) * 0.3;
-
-      // Add 4% Health & Education Cess
-      tax = tax * 1.04;
+  // Auto-calculates instantly when user types or clicks +/-
+  useEffect(() => {
+    if (ctcInput) {
+      const details = calculate2026Details(ctcInput);
+      setMonthlyInHand(details ? details.monthlyInHand : null);
     } else {
-      // Tax is zero if taxable income is <= 12L
-      tax = 0;
+      setMonthlyInHand(null);
     }
-
-    const annualInHand = fixedGross - pfEmployee - tax;
-    setMonthlyInHand(annualInHand / 12);
-  };
+  }, [ctcInput]);
 
   return (
     <ToolCard
@@ -75,9 +40,9 @@ export default function SalaryCalculator() {
       iconClass="bg-emerald-600"
       cardStyle={{ background: "#f0fdf4", borderColor: "#bbf7d0" }}
     >
-      <div className="space-y-4">
+      <div className="space-y-4 flex-grow flex flex-col">
         <div>
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
             Annual CTC (₹)
           </label>
           <div className="relative flex items-center">
@@ -92,7 +57,7 @@ export default function SalaryCalculator() {
               value={ctcInput}
               onChange={(e) => formatAndSetCTC(e.target.value)}
               placeholder="e.g. 8,00,000"
-              className="w-full text-center px-10 py-3 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:outline-none text-sm font-semibold bg-white text-slate-800"
+              className="w-full text-center px-10 py-2.5 border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:outline-none text-sm font-semibold bg-white text-slate-800"
             />
             <button
               onClick={() => adjustCTC(100000)}
@@ -102,29 +67,23 @@ export default function SalaryCalculator() {
             </button>
           </div>
         </div>
-        <button
-          onClick={calculateInHand}
-          className="w-full py-3 text-white font-semibold rounded-xl cursor-pointer hover:bg-emerald-700 transition-colors bg-emerald-600"
-        >
-          Calculate Salary
-        </button>
-      </div>
 
-      {monthlyInHand !== null && (
-        <div className="mt-5 bg-white rounded-xl p-5 text-center border border-emerald-100 animate-row">
-          <div className="text-xs text-stone-400 font-semibold uppercase tracking-wider mb-1">
-            Est. Monthly In-Hand
+        {monthlyInHand !== null && (
+          <div className="mt-auto bg-white rounded-xl p-4 text-center border border-emerald-100 shadow-sm animate-row">
+            <div className="text-[10px] text-stone-400 font-semibold uppercase tracking-wider mb-1">
+              Est. Monthly In-Hand
+            </div>
+            <div className="text-3xl font-display font-bold text-emerald-600">
+              ₹ {Math.round(monthlyInHand).toLocaleString("en-IN")}
+            </div>
+            <div className="mt-1 text-[9px] text-stone-500 leading-tight">
+              *Approximate via New Tax Regime.
+              <br />
+              Accounts for std. deduction & EPF.
+            </div>
           </div>
-          <div className="text-3xl font-display font-bold text-emerald-600">
-            ₹ {Math.round(monthlyInHand).toLocaleString("en-IN")}
-          </div>
-          <div className="mt-2 text-[10px] text-stone-500 leading-tight">
-            *Approximate via New Tax Regime.
-            <br />
-            Accounts for std. deduction & standard EPF.
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </ToolCard>
   );
 }

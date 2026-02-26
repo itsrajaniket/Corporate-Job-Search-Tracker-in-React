@@ -1,3 +1,4 @@
+// src/components/calculators/ToolCard.jsx
 import React from "react";
 
 export default function ToolCard({
@@ -9,7 +10,10 @@ export default function ToolCard({
   children,
 }) {
   return (
-    <div className="calc-card" style={cardStyle}>
+    <div
+      className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 flex flex-col h-full transition-all"
+      style={cardStyle}
+    >
       <div className="flex items-center gap-3 mb-6">
         <div
           className={`w-10 h-10 rounded-xl text-white flex items-center justify-center ${iconClass}`}
@@ -17,13 +21,15 @@ export default function ToolCard({
           <i className={icon}></i>
         </div>
         <div>
-          <h3 className="font-display font-bold text-slate-800">{title}</h3>
-          <p className="text-xs text-stone-400">{subtitle}</p>
+          <h3 className="text-sm font-display font-bold text-slate-900 leading-tight">
+            {title}
+          </h3>
+          <p className="text-[10px] text-stone-400 font-medium uppercase tracking-tight">
+            {subtitle}
+          </p>
         </div>
       </div>
-
-      {/* This is where the specific calculator inputs/buttons will go */}
-      {children}
+      <div className="flex-grow flex flex-col">{children}</div>
     </div>
   );
 }
