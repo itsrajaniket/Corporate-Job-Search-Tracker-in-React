@@ -29,28 +29,40 @@ export default function SalaryCalculator() {
       return;
     }
 
-    const basic = ctc * 0.5;
-    const gratuity = basic * 0.0481;
-    const pfEmployer = Math.min(basic * 0.12, 21600);
+    const basic = ctc * 0.5; // Standard 50% basic
+    const gratuity = basic * 0.0481; // 4.81% gratuity component
+    const pfEmployer = Math.min(basic * 0.12, 21600); // PF capped at 1800/mo
     const pfEmployee = pfEmployer;
+
+    // Gross salary before tax and employee PF
     const fixedGross = ctc - pfEmployer - gratuity;
 
+    // 2026 Standard Deduction is ₹75,000
     let taxableIncome = Math.max(0, fixedGross - 75000);
     let tax = 0;
 
-    if (taxableIncome > 700000) {
-      if (taxableIncome > 300000)
-        tax += Math.min(taxableIncome - 300000, 400000) * 0.05;
-      if (taxableIncome > 700000)
-        tax += Math.min(taxableIncome - 700000, 300000) * 0.1;
-      if (taxableIncome > 1000000)
-        tax += Math.min(taxableIncome - 1000000, 200000) * 0.15;
+    // REVISED 2026 SLABS: Taxable income up to 12L is tax-free
+    if (taxableIncome > 1200000) {
+      // Slab-wise calculation for income above the 12L threshold
+      if (taxableIncome > 400000)
+        tax += Math.min(400000, taxableIncome - 400000) * 0.05;
+      if (taxableIncome > 800000)
+        tax += Math.min(400000, taxableIncome - 800000) * 0.1;
       if (taxableIncome > 1200000)
-        tax += Math.min(taxableIncome - 1200000, 300000) * 0.2;
-      if (taxableIncome > 1500000) tax += (taxableIncome - 1500000) * 0.3;
+        tax += Math.min(400000, taxableIncome - 1200000) * 0.15;
+      if (taxableIncome > 1600000)
+        tax += Math.min(400000, taxableIncome - 1600000) * 0.2;
+      if (taxableIncome > 2000000)
+        tax += Math.min(400000, taxableIncome - 2000000) * 0.25;
+      if (taxableIncome > 2400000) tax += (taxableIncome - 2400000) * 0.3;
+
+      // Add 4% Health & Education Cess
+      tax = tax * 1.04;
+    } else {
+      // Tax is zero if taxable income is <= 12L
+      tax = 0;
     }
 
-    tax = tax * 1.04;
     const annualInHand = fixedGross - pfEmployee - tax;
     setMonthlyInHand(annualInHand / 12);
   };

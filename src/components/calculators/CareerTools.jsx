@@ -3,6 +3,9 @@ import React from "react";
 import TenureCalculator from "./TenureCalculator";
 import ExitDateCalculator from "./ExitDateCalculator";
 import SalaryCalculator from "./SalaryCalculator";
+import TaxCalculator from "./TaxCalculator";
+
+import CompareOffers from "./CompareOffers";
 // import FutureTool from "./FutureTool"; <-- Ready for your next addition!
 
 export default function CareerTools() {
@@ -23,7 +26,9 @@ export default function CareerTools() {
           <TenureCalculator />
           <ExitDateCalculator />
           <SalaryCalculator />
+          <TaxCalculator />
           {/* <FutureTool /> */}
+          <CompareOffers />
         </div>
       </div>
     </section>
