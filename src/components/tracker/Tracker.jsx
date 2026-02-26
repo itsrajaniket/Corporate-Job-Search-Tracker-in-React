@@ -25,9 +25,14 @@ export default function Tracker({
   };
 
   const filteredAndSortedData = useMemo(() => {
+    // 0. DEDUPLICATE THE DATA (Fixes the Atos/Birlasoft double entries)
+    // This looks at the company name and ensures it only ever renders once
+    const uniqueCompanies = Array.from(
+      new Map(allCompanies.map((item) => [item.name, item])).values(),
+    );
+
     // 1. Filter the data
-    let filtered = allCompanies.filter((item) => {
-      // Safely grab fields, defaulting to an empty string if they don't exist
+    let filtered = uniqueCompanies.filter((item) => {
       const safeName = item.name || "";
       const safeIndustry = item.industry || "";
       const safePolicy = item.policy || "";
@@ -37,26 +42,36 @@ export default function Tracker({
         !search || safeName.toLowerCase().includes(search.toLowerCase());
       let matchCat = true;
 
-      if (activeFilter === "Applied Only") {
+      // FIX: Using .includes() makes the filter immune to emojis or text changes!
+      if (
+        activeFilter.includes("My Tracked") ||
+        activeFilter === "Applied Only"
+      ) {
         const status = trackerData[item.name]?.status;
         matchCat = status && status !== "Not Applied";
-      } else if (activeFilter === "Custom Only") {
+      } else if (
+        activeFilter.includes("Added by Me") ||
+        activeFilter === "Custom Only"
+      ) {
         matchCat = item.isCustom === true;
-      } else if (activeFilter === "Important") {
+      } else if (
+        activeFilter.includes("Must Apply") ||
+        activeFilter === "Important"
+      ) {
         matchCat = item.isImportant === true;
-      } else if (activeFilter === "Service-Based") {
+      } else if (activeFilter.includes("Service")) {
         matchCat = safeIndustry.includes("Service-Based");
-      } else if (activeFilter === "Product-Based") {
+      } else if (activeFilter.includes("Product")) {
         matchCat = safeIndustry.includes("Product-Based");
-      } else if (activeFilter === "Consulting") {
+      } else if (activeFilter.includes("Consulting")) {
         matchCat = safeIndustry.includes("Consulting");
-      } else if (activeFilter === "Banking") {
+      } else if (activeFilter.includes("Banking")) {
         matchCat = safeIndustry.includes("Banking");
-      } else if (activeFilter === "Engineering Services") {
+      } else if (activeFilter.includes("Engineering")) {
         matchCat = safeIndustry.includes("Engineering");
-      } else if (activeFilter === "90 Days") {
+      } else if (activeFilter.includes("90 Days")) {
         matchCat = ["90 Days", "60-90 Days", "60 Days"].includes(safePolicy);
-      } else if (activeFilter === "Buyout") {
+      } else if (activeFilter.includes("Buyo")) {
         matchCat = ["Possible", "Occasional", "Available", "Yes"].includes(
           safeBuyout,
         );
@@ -65,7 +80,7 @@ export default function Tracker({
       return matchSearch && matchCat;
     });
 
-    // 2. Sort the data (also safely!)
+    // 2. Sort the data
     filtered.sort((a, b) => {
       let valA = a[sortCol] || "";
       let valB = b[sortCol] || "";
