@@ -43,6 +43,12 @@ export default function App() {
             if (cloudData.trackerData) setTrackerData(cloudData.trackerData);
             if (cloudData.customCompanies)
               setCustomCompanies(cloudData.customCompanies);
+          } else {
+            // BRAND NEW USER FIX: Wipe old local data and create a fresh cloud save
+            setTrackerData({});
+            setCustomCompanies([]);
+            // We save empty data to the cloud so Firebase knows this new user exists
+            await setDoc(docRef, { trackerData: {}, customCompanies: [] });
           }
         } catch (error) {
           console.error("Error fetching cloud data:", error);
