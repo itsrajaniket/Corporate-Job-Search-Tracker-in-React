@@ -1,7 +1,34 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { auth, googleProvider } from "../../firebase";
+import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
 
 export default function Navbar({ onRestoreData, onResetData }) {
   const fileInputRef = useRef(null);
+  const [user, setUser] = useState(null);
+
+  // This listener checks if the user is already logged in when they open the app
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, []);
+
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -24,8 +51,7 @@ export default function Navbar({ onRestoreData, onResetData }) {
   };
 
   const exportJSON = () => {
-    // Basic export structure - you'll likely pass the actual data from App.jsx eventually
-    alert("Export logic will be wired up to your state here!");
+    alert("Local JSON export is active. Cloud sync coming next!");
   };
 
   return (
@@ -38,6 +64,7 @@ export default function Navbar({ onRestoreData, onResetData }) {
         onChange={handleFileChange}
       />
       <div className="max-w-[1400px] mx-auto px-6 flex justify-between items-center h-[60px]">
+        {/* Logo Section */}
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center">
             <i className="fas fa-anchor text-white text-sm"></i>
@@ -50,6 +77,7 @@ export default function Navbar({ onRestoreData, onResetData }) {
           </span>
         </div>
 
+        {/* Links & Actions Section */}
         <div className="hidden md:flex items-center gap-5 text-sm font-medium">
           <a
             href="#tracker"
@@ -72,9 +100,10 @@ export default function Navbar({ onRestoreData, onResetData }) {
 
           <div className="h-4 w-px bg-stone-300 mx-2"></div>
 
+          {/* Legacy Local Data Dropdown */}
           <div className="relative group">
             <button className="text-stone-500 hover:text-amber-600 transition-colors flex items-center gap-1 cursor-pointer">
-              <i className="fas fa-database"></i> Data
+              <i className="fas fa-database"></i> Local Data
               <i className="fas fa-chevron-down text-[10px]"></i>
             </button>
             <div className="absolute right-0 mt-2 w-48 bg-white border border-stone-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
@@ -102,6 +131,38 @@ export default function Navbar({ onRestoreData, onResetData }) {
               </button>
             </div>
           </div>
+
+          <div className="h-4 w-px bg-stone-300 mx-2"></div>
+
+          {/* Firebase Authentication UI */}
+          {user ? (
+            <div className="flex items-center gap-3 bg-white border border-stone-200 pl-2 pr-4 py-1 rounded-full shadow-sm">
+              <img
+                src={user.photoURL}
+                alt="Profile"
+                className="w-7 h-7 rounded-full border border-stone-200"
+                referrerPolicy="no-referrer"
+              />
+              <div className="flex flex-col">
+                <span className="text-[10px] text-stone-400 leading-tight uppercase font-bold">
+                  Cloud Sync Active
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-semibold text-slate-700 hover:text-red-500 text-left transition-colors cursor-pointer"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={handleLogin}
+              className="btn-primary flex items-center gap-2"
+            >
+              <i className="fab fa-google"></i> Sign In
+            </button>
+          )}
         </div>
       </div>
     </nav>

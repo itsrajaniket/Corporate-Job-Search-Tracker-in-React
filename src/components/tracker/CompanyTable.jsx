@@ -40,21 +40,27 @@ export default function CompanyTable({
         <table className="company-table min-w-full">
           <thead>
             <tr>
-              <th className="text-left w-[30%]" onClick={() => onSort("name")}>
+              <th
+                className="text-left w-[30%] cursor-pointer select-none"
+                onClick={() => onSort("name")}
+              >
                 Company
                 <i
                   className={`fas ${sortCol === "name" ? (sortDesc ? "fa-sort-down text-amber-600" : "fa-sort-up text-amber-600") : "fa-sort"} text-stone-300 ml-1`}
                 ></i>
               </th>
-              <th className="text-left" onClick={() => onSort("industry")}>
+              <th
+                className="text-left cursor-pointer select-none"
+                onClick={() => onSort("industry")}
+              >
                 Industry
                 <i
                   className={`fas ${sortCol === "industry" ? (sortDesc ? "fa-sort-down text-amber-600" : "fa-sort-up text-amber-600") : "fa-sort"} text-stone-300 ml-1`}
                 ></i>
               </th>
               <th
-                className="text-left w-32"
-                data-tip="Typical notice period"
+                className="text-left w-32 cursor-pointer select-none"
+                title="Typical notice period"
                 onClick={() => onSort("policy")}
               >
                 Notice
@@ -63,16 +69,17 @@ export default function CompanyTable({
                 ></i>
               </th>
               <th
-                className="text-left w-28"
-                data-tip="Can you buy out your notice period?"
+                className="text-left w-28 cursor-pointer select-none"
+                title="Can you buy out your notice period?"
               >
                 Buyout
               </th>
-              <th className="text-left w-44">My Status</th>
-              <th className="text-left">Notes</th>
+              <th className="text-left w-44 select-none">My Status</th>
+              <th className="text-left select-none">Notes</th>
             </tr>
           </thead>
           <tbody>
+            {/* If the filter finds nothing, show this single empty state row */}
             {data.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center py-16 text-stone-400">
@@ -80,8 +87,8 @@ export default function CompanyTable({
                 </td>
               </tr>
             ) : (
+              /* If the filter finds matches, map over ONLY those matches */
               data.map((company) => {
-                // Safely grab the data or use default values to prevent 'undefined' bugs
                 const us = trackerData[company.name] || {};
                 const currentStatus = us.status || "Not Applied";
                 const currentNotes = us.notes || "";
@@ -91,7 +98,7 @@ export default function CompanyTable({
                     <td>
                       <div className="flex flex-col gap-0.5">
                         <a
-                          href={company.career}
+                          href={company.career || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm font-semibold text-slate-800 hover:text-amber-600 transition-colors inline-flex items-center gap-1 group"
@@ -184,7 +191,7 @@ export default function CompanyTable({
         </span>
         <span className="text-xs text-stone-400">
           <i className="fas fa-check-circle mr-1 text-emerald-500"></i>
-          Auto-saved locally
+          Auto-saved
         </span>
       </div>
     </div>

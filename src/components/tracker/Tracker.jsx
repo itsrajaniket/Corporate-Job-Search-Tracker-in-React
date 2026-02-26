@@ -7,7 +7,7 @@ export default function Tracker({
   allCompanies,
   trackerData,
   onUpdateTracker,
-  setCustomCompanies,
+  setCustomCompanies, // This now points directly to the cloud-saving function in App.jsx!
   onDeleteCustomCompany,
 }) {
   const [search, setSearch] = useState("");
@@ -27,37 +27,45 @@ export default function Tracker({
   const filteredAndSortedData = useMemo(() => {
     // 1. Filter the data
     let filtered = allCompanies.filter((item) => {
+      // Safely grab fields, defaulting to an empty string if they don't exist
+      const safeName = item.name || "";
+      const safeIndustry = item.industry || "";
+      const safePolicy = item.policy || "";
+      const safeBuyout = item.buyout || "";
+
       const matchSearch =
-        !search || item.name.toLowerCase().includes(search.toLowerCase());
+        !search || safeName.toLowerCase().includes(search.toLowerCase());
       let matchCat = true;
 
       if (activeFilter === "Applied Only") {
-        matchCat =
-          trackerData[item.name]?.status &&
-          trackerData[item.name].status !== "Not Applied";
-      } else if (activeFilter === "Custom Only") matchCat = item.isCustom;
-      else if (activeFilter === "Important") matchCat = item.isImportant;
-      else if (activeFilter === "Service-Based")
-        matchCat = item.industry.includes("Service-Based");
-      else if (activeFilter === "Product-Based")
-        matchCat = item.industry.includes("Product-Based");
-      else if (activeFilter === "Consulting")
-        matchCat = item.industry.includes("Consulting");
-      else if (activeFilter === "Banking")
-        matchCat = item.industry.includes("Banking");
-      else if (activeFilter === "Engineering Services")
-        matchCat = item.industry.includes("Engineering");
-      else if (activeFilter === "90 Days")
-        matchCat = ["90 Days", "60-90 Days", "60 Days"].includes(item.policy);
-      else if (activeFilter === "Buyout")
-        matchCat = ["Possible", "Occasional", "Available"].includes(
-          item.buyout,
+        const status = trackerData[item.name]?.status;
+        matchCat = status && status !== "Not Applied";
+      } else if (activeFilter === "Custom Only") {
+        matchCat = item.isCustom === true;
+      } else if (activeFilter === "Important") {
+        matchCat = item.isImportant === true;
+      } else if (activeFilter === "Service-Based") {
+        matchCat = safeIndustry.includes("Service-Based");
+      } else if (activeFilter === "Product-Based") {
+        matchCat = safeIndustry.includes("Product-Based");
+      } else if (activeFilter === "Consulting") {
+        matchCat = safeIndustry.includes("Consulting");
+      } else if (activeFilter === "Banking") {
+        matchCat = safeIndustry.includes("Banking");
+      } else if (activeFilter === "Engineering Services") {
+        matchCat = safeIndustry.includes("Engineering");
+      } else if (activeFilter === "90 Days") {
+        matchCat = ["90 Days", "60-90 Days", "60 Days"].includes(safePolicy);
+      } else if (activeFilter === "Buyout") {
+        matchCat = ["Possible", "Occasional", "Available", "Yes"].includes(
+          safeBuyout,
         );
+      }
 
       return matchSearch && matchCat;
     });
 
-    // 2. Sort the data
+    // 2. Sort the data (also safely!)
     filtered.sort((a, b) => {
       let valA = a[sortCol] || "";
       let valB = b[sortCol] || "";
@@ -75,7 +83,6 @@ export default function Tracker({
 
     return filtered;
   }, [allCompanies, trackerData, search, activeFilter, sortCol, sortDesc]);
-
   return (
     <section
       id="tracker"
@@ -107,7 +114,7 @@ export default function Tracker({
           </div>
         </div>
 
-        {/* Custom Company Form */}
+        {/* Custom Company Form with Duplicate Check */}
         <CustomCompanyForm
           onAddCompany={(newComp) => {
             // Check if company already exists before adding
@@ -119,7 +126,8 @@ export default function Tracker({
               alert("This company is already in your tracker!");
               return;
             }
-            setCustomCompanies((prev) => [newComp, ...prev]);
+            // Simply pass the new company up to App.jsx to handle cloud saving!
+            setCustomCompanies(newComp);
           }}
         />
 
@@ -129,7 +137,7 @@ export default function Tracker({
           setActiveFilter={setActiveFilter}
         />
 
-        {/* Table with Delete Prop */}
+        {/* Table */}
         <CompanyTable
           data={filteredAndSortedData}
           trackerData={trackerData}
@@ -137,7 +145,7 @@ export default function Tracker({
           sortDesc={sortDesc}
           onSort={handleSort}
           onUpdateTracker={onUpdateTracker}
-          onDeleteCustom={onDeleteCustomCompany} // <-- Pass it to the table
+          onDeleteCustom={onDeleteCustomCompany}
         />
       </div>
     </section>
