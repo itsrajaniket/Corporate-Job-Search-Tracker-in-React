@@ -16,7 +16,7 @@ import Footer from "./components/layout/Footer";
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // Prevents flashing the login screen on refresh
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const [customCompanies, setCustomCompanies] = useLocalStorage(
     "customCompanies_v5",
@@ -33,7 +33,6 @@ export default function App() {
       setUser(currentUser);
 
       if (currentUser) {
-        // User logged in: Fetch cloud data
         try {
           const docRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(docRef);
@@ -44,29 +43,26 @@ export default function App() {
             if (cloudData.customCompanies)
               setCustomCompanies(cloudData.customCompanies);
           } else {
-            // BRAND NEW USER FIX: Wipe old local data and create a fresh cloud save
             setTrackerData({});
             setCustomCompanies([]);
-            // We save empty data to the cloud so Firebase knows this new user exists
             await setDoc(docRef, { trackerData: {}, customCompanies: [] });
           }
         } catch (error) {
           console.error("Error fetching cloud data:", error);
         }
       } else {
-        // User logged out: Wipe the screen's memory immediately!
-        setTrackerData({});
-        setCustomCompanies([]);
+        // We DO NOT wipe local data here anymore!
+        // We want logged-out users to keep using the local free version.
       }
 
-      setIsCheckingAuth(false); // Finished checking!
+      setIsCheckingAuth(false);
     });
     return () => unsubscribe();
   }, []);
 
   // 2. The Cloud Saver Function
   const saveToCloud = async (updatedTracker, updatedCustom) => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) return; // Only saves to cloud if they paid & logged in
     try {
       await setDoc(doc(db, "users", auth.currentUser.uid), {
         trackerData: updatedTracker,
@@ -77,12 +73,50 @@ export default function App() {
     }
   };
 
-  const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Login failed:", error);
+  // 3. THE FREEMIUM PAYWALL LOGIC
+  const handleLoginWithPaywall = async () => {
+    const res = await new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+
+    if (!res) {
+      alert("Razorpay failed to load. Please check your internet connection.");
+      return;
     }
+
+    const options = {
+      key: "rzp_test_YourActualKeyHere", // 🔴 PASTE YOUR TEST KEY HERE!
+      amount: "9900", // ₹99.00
+      currency: "INR",
+      name: "Job Tracker Pro",
+      description: "Unlock Cloud Sync & Account Access",
+      theme: { color: "#6366f1" },
+      handler: async function (response) {
+        console.log("Payment Success ID:", response.razorpay_payment_id);
+
+        // Payment Success -> Trigger Google Login!
+        try {
+          await signInWithPopup(auth, googleProvider);
+          alert(
+            "Payment successful! Welcome to Pro. Your data is now syncing to the cloud.",
+          );
+        } catch (error) {
+          console.error("Login failed after payment:", error);
+        }
+      },
+      prefill: {
+        name: "Hiring Manager",
+        email: "recruiter@example.com",
+        contact: "9999999999",
+      },
+    };
+
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.open();
   };
 
   const allCompanies = useMemo(() => {
@@ -137,7 +171,6 @@ export default function App() {
     saveToCloud(resetData, customCompanies);
   };
 
-  // Prevent UI flashing while Firebase checks if you are logged in
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
@@ -147,51 +180,32 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-stone-50">
+      {/* 4. Pass User and Paywall Login to Navbar */}
       <Navbar
         allCompanies={allCompanies}
         trackerData={trackerData}
         onRestoreData={handleRestoreData}
         onResetData={handleResetData}
+        user={user}
+        onLogin={handleLoginWithPaywall}
+        onLogout={() => auth.signOut()}
       />
 
-      {/* THE GATEWAY: Show Dashboard IF logged in, else show Landing Page */}
-      {user ? (
-        <main className="flex-grow">
-          <HeroStats allCompanies={allCompanies} trackerData={trackerData} />
-          <Tracker
-            allCompanies={allCompanies}
-            trackerData={trackerData}
-            onUpdateTracker={handleUpdateTracker}
-            setCustomCompanies={handleAddCustomCompany}
-            onDeleteCustomCompany={handleDeleteCustomCompany}
-          />
-          <CareerTools />
-          <MarketCharts allCompanies={allCompanies} />
-        </main>
-      ) : (
-        <main className="flex-grow flex items-center justify-center bg-stone-50 px-6 py-20">
-          <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-stone-200 p-10 text-center animate-fade-in">
-            <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-2xl shadow-inner">
-              <i className="fas fa-lock"></i>
-            </div>
-            <h1 className="text-3xl font-display font-bold text-slate-900 mb-3">
-              Your Job Search, Anchored.
-            </h1>
-            <p className="text-stone-500 mb-8 leading-relaxed">
-              Sign in to access your cloud-synced dashboard. Track applications,
-              analyze market data, and never lose a job lead again.
-            </p>
-            <button
-              onClick={handleLogin}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 px-6 rounded-xl transition-all flex items-center justify-center gap-3 shadow-md hover:shadow-lg cursor-pointer"
-            >
-              <i className="fab fa-google text-amber-400"></i> Continue with
-              Google
-            </button>
-          </div>
-        </main>
-      )}
+      <HeroStats allCompanies={allCompanies} trackerData={trackerData} />
+
+      {/* 5. The Gateway is gone. The app is open to everyone! */}
+      <main className="flex-grow">
+        <Tracker
+          allCompanies={allCompanies}
+          trackerData={trackerData}
+          onUpdateTracker={handleUpdateTracker}
+          setCustomCompanies={handleAddCustomCompany}
+          onDeleteCustomCompany={handleDeleteCustomCompany}
+        />
+        <CareerTools />
+        <MarketCharts allCompanies={allCompanies} />
+      </main>
 
       <Footer />
     </div>

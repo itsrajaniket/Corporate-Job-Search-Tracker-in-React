@@ -1,4 +1,5 @@
 // src/components/calculators/CareerTools.jsx
+
 import React from "react";
 import TenureCalculator from "./TenureCalculator";
 import ExitDateCalculator from "./ExitDateCalculator";
@@ -24,6 +25,7 @@ export default function CareerTools() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <TenureCalculator />
           <ExitDateCalculator />
+
           <SalaryCalculator />
           <TaxCalculator />
           <FutureTool />

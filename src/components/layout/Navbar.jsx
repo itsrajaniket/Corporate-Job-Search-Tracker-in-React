@@ -1,34 +1,14 @@
-import React, { useRef, useState, useEffect } from "react";
-import { auth, googleProvider } from "../../firebase";
-import { signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth";
+import React, { useRef } from "react";
 
-export default function Navbar({ onRestoreData, onResetData }) {
+// Notice we added user, onLogin, and onLogout to the props here!
+export default function Navbar({
+  onRestoreData,
+  onResetData,
+  user,
+  onLogin,
+  onLogout,
+}) {
   const fileInputRef = useRef(null);
-  const [user, setUser] = useState(null);
-
-  // This listener checks if the user is already logged in when they open the app
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe(); // Cleanup listener on unmount
-  }, []);
-
-  const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -148,7 +128,7 @@ export default function Navbar({ onRestoreData, onResetData }) {
                   Cloud Sync Active
                 </span>
                 <button
-                  onClick={handleLogout}
+                  onClick={onLogout} // We now use the onLogout prop from App.jsx!
                   className="text-xs font-semibold text-slate-700 hover:text-red-500 text-left transition-colors cursor-pointer"
                 >
                   Sign Out
@@ -157,10 +137,10 @@ export default function Navbar({ onRestoreData, onResetData }) {
             </div>
           ) : (
             <button
-              onClick={handleLogin}
-              className="btn-primary flex items-center gap-2"
+              onClick={onLogin} // We now use the onLogin prop from App.jsx!
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-md transition-all cursor-pointer"
             >
-              <i className="fab fa-google"></i> Sign In
+              <i className="fas fa-lock text-indigo-300"></i> Unlock Pro
             </button>
           )}
         </div>
