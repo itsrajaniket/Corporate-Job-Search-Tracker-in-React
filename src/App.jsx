@@ -14,6 +14,7 @@ import CareerTools from "./components/calculators/CareerTools";
 import MarketCharts from "./components/dashboard/MarketCharts";
 import Footer from "./components/layout/Footer";
 
+import bgImage from "./assets/bg.jpeg";
 export default function App() {
   const [user, setUser] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -169,14 +170,16 @@ export default function App() {
           />
         ) : (
           <section id="tracker" className="max-w-[1400px] mx-auto px-6 py-16">
-            <div className="bg-white rounded-3xl border border-stone-200 shadow-xl shadow-stone-200/50 py-20 px-6 text-center relative overflow-hidden flex flex-col items-center justify-center">
-              {/* Decorative background blur */}
-              <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-amber-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-
-              <div className="w-20 h-20 bg-stone-50 text-stone-300 rounded-2xl flex items-center justify-center mb-6 border border-stone-200 shadow-inner relative z-10">
-                <i className="fas fa-lock text-3xl"></i>
-              </div>
-
+            <div className="bg-white rounded-3xl border border-stone-200 shadow-xl shadow-stone-200/50 min-h-[500px] text-center relative overflow-hidden flex flex-col items-center justify-center group">
+              {/* THE BLURRED IMAGE LAYER: We scale it 110% to prevent white edges from the blur */}
+              <div
+                className="absolute inset-0 bg-cover bg-center filter blur-[1px] scale-110 opacity-40 transition-opacity duration-500 group-hover:opacity-60"
+                style={{
+                  // 🔴 REPLACE THIS URL WITH A SCREENSHOT OF YOUR LOGGED-IN TABLE!
+                  // E.g., backgroundImage: "url('/public/tracker-screenshot.jpg')"
+                  backgroundImage: `url(${bgImage})`,
+                }}
+              ></div>
               <h2 className="text-3xl font-display font-black text-slate-800 mb-3 relative z-10">
                 Company Tracker Locked
               </h2>
