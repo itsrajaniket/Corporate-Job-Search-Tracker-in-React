@@ -28,7 +28,7 @@ export default function PremiumUpgrade({ onUnlockSuccess }) {
     // 3. Configure the Checkout Modal
     const options = {
       // NOTE: We use a generic Test Key here. Later, you can swap it for your own!
-      key: "0fPhet4iyxMz6xepSX8PNtGq",
+      key: "rzp_live_SKwCdzsUJ5f8sQ",
       amount: "2100", // Razorpay uses paise!
       currency: "INR",
       name: "Job Tracker Pro",
