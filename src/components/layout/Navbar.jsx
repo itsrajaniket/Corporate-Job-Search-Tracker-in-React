@@ -1,6 +1,5 @@
 import React, { useRef } from "react";
 
-// Notice we added user, onLogin, and onLogout to the props here!
 export default function Navbar({
   onRestoreData,
   onResetData,
@@ -30,12 +29,32 @@ export default function Navbar({
     reader.readAsText(file);
   };
 
+  // Bonus: Actually downloads the local data as a JSON file!
   const exportJSON = () => {
-    alert("Local JSON export is active. Cloud sync coming next!");
+    try {
+      const tracker = JSON.parse(
+        localStorage.getItem("noticeTrackerMaster2") || "{}",
+      );
+      const custom = JSON.parse(
+        localStorage.getItem("customCompanies_v5") || "[]",
+      );
+
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify({ tracker, custom }));
+      const downloadAnchorNode = document.createElement("a");
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", "job_tracker_backup.json");
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    } catch (error) {
+      alert("Error exporting data.");
+    }
   };
 
   return (
-    <nav className="nav-glass sticky top-0 z-50 shadow-sm">
+    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-stone-200 shadow-sm">
       <input
         type="file"
         accept=".json"
@@ -43,22 +62,22 @@ export default function Navbar({
         ref={fileInputRef}
         onChange={handleFileChange}
       />
-      <div className="max-w-[1400px] mx-auto px-6 flex justify-between items-center h-[60px]">
+      <div className="max-w-[1400px] mx-auto px-6 flex justify-between items-center h-[65px]">
         {/* Logo Section */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-600 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-orange-200">
             <i className="fas fa-anchor text-white text-sm"></i>
           </div>
-          <span className="font-display font-bold text-lg text-slate-900">
+          <span className="font-display font-black text-xl text-slate-800 tracking-tight">
             90-Day Anchor
           </span>
-          <span className="hidden sm:inline text-xs bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold">
-            India Job Tracker
+          <span className="hidden sm:inline text-[10px] bg-stone-100 text-stone-500 border border-stone-200 px-2 py-1 rounded-md font-bold uppercase tracking-wider ml-1">
+            India
           </span>
         </div>
 
         {/* Links & Actions Section */}
-        <div className="hidden md:flex items-center gap-5 text-sm font-medium">
+        <div className="hidden md:flex items-center gap-6 text-sm font-semibold">
           <a
             href="#tracker"
             className="text-stone-500 hover:text-amber-600 transition-colors"
@@ -78,25 +97,25 @@ export default function Navbar({
             Market Data
           </a>
 
-          <div className="h-4 w-px bg-stone-300 mx-2"></div>
+          <div className="h-5 w-px bg-stone-200 mx-1"></div>
 
-          {/* Legacy Local Data Dropdown */}
+          {/* Local Data Dropdown */}
           <div className="relative group">
-            <button className="text-stone-500 hover:text-amber-600 transition-colors flex items-center gap-1 cursor-pointer">
-              <i className="fas fa-database"></i> Local Data
-              <i className="fas fa-chevron-down text-[10px]"></i>
+            <button className="text-stone-500 hover:text-amber-600 transition-colors flex items-center gap-1.5 cursor-pointer bg-stone-50 px-3 py-1.5 rounded-lg border border-transparent hover:border-stone-200">
+              <i className="fas fa-database text-xs"></i> Local Data
+              <i className="fas fa-chevron-down text-[9px] ml-0.5"></i>
             </button>
-            <div className="absolute right-0 mt-2 w-48 bg-white border border-stone-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-stone-200 rounded-xl shadow-xl shadow-stone-200/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 py-2">
               <button
                 onClick={exportJSON}
-                className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-amber-600 cursor-pointer"
+                className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-amber-600 cursor-pointer font-medium"
               >
                 <i className="fas fa-download w-4 text-center mr-2"></i> Backup
                 (JSON)
               </button>
               <button
                 onClick={handleImportClick}
-                className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-amber-600 cursor-pointer"
+                className="w-full text-left px-4 py-2 text-sm text-stone-600 hover:bg-stone-50 hover:text-amber-600 cursor-pointer font-medium"
               >
                 <i className="fas fa-upload w-4 text-center mr-2"></i> Restore
                 (JSON)
@@ -104,7 +123,7 @@ export default function Navbar({
               <div className="h-px bg-stone-100 my-1"></div>
               <button
                 onClick={onResetData}
-                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer"
+                className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer font-medium"
               >
                 <i className="fas fa-rotate-left w-4 text-center mr-2"></i>{" "}
                 Reset Statuses
@@ -112,11 +131,11 @@ export default function Navbar({
             </div>
           </div>
 
-          <div className="h-4 w-px bg-stone-300 mx-2"></div>
+          <div className="h-5 w-px bg-stone-200 mx-1"></div>
 
           {/* Firebase Authentication UI */}
           {user ? (
-            <div className="flex items-center gap-3 bg-white border border-stone-200 pl-2 pr-4 py-1 rounded-full shadow-sm">
+            <div className="flex items-center gap-3 bg-stone-50 border border-stone-200 pl-2 pr-4 py-1.5 rounded-full shadow-sm">
               <img
                 src={user.photoURL}
                 alt="Profile"
@@ -124,12 +143,12 @@ export default function Navbar({
                 referrerPolicy="no-referrer"
               />
               <div className="flex flex-col">
-                <span className="text-[10px] text-stone-400 leading-tight uppercase font-bold">
-                  Cloud Sync Active
+                <span className="text-[9px] text-emerald-600 leading-tight uppercase font-black tracking-wider">
+                  Cloud Synced
                 </span>
                 <button
-                  onClick={onLogout} // We now use the onLogout prop from App.jsx!
-                  className="text-xs font-semibold text-slate-700 hover:text-red-500 text-left transition-colors cursor-pointer"
+                  onClick={onLogout}
+                  className="text-xs font-bold text-slate-700 hover:text-red-500 text-left transition-colors cursor-pointer"
                 >
                   Sign Out
                 </button>
@@ -137,10 +156,10 @@ export default function Navbar({
             </div>
           ) : (
             <button
-              onClick={onLogin} // We now use the onLogin prop from App.jsx!
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl flex items-center gap-2 font-semibold shadow-md transition-all cursor-pointer"
+              onClick={onLogin}
+              className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 font-bold shadow-md shadow-slate-200 hover:-translate-y-0.5 transition-all cursor-pointer"
             >
-              <i className="fas fa-lock text-indigo-300"></i> Unlock Pro
+              <i className="fab fa-google text-amber-400"></i> Sign In
             </button>
           )}
         </div>

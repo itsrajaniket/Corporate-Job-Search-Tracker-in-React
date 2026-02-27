@@ -50,11 +50,7 @@ export default function App() {
         } catch (error) {
           console.error("Error fetching cloud data:", error);
         }
-      } else {
-        // We DO NOT wipe local data here anymore!
-        // We want logged-out users to keep using the local free version.
       }
-
       setIsCheckingAuth(false);
     });
     return () => unsubscribe();
@@ -62,7 +58,7 @@ export default function App() {
 
   // 2. The Cloud Saver Function
   const saveToCloud = async (updatedTracker, updatedCustom) => {
-    if (!auth.currentUser) return; // Only saves to cloud if they paid & logged in
+    if (!auth.currentUser) return;
     try {
       await setDoc(doc(db, "users", auth.currentUser.uid), {
         trackerData: updatedTracker,
@@ -73,50 +69,13 @@ export default function App() {
     }
   };
 
-  // 3. THE FREEMIUM PAYWALL LOGIC
-  const handleLoginWithPaywall = async () => {
-    const res = await new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-
-    if (!res) {
-      alert("Razorpay failed to load. Please check your internet connection.");
-      return;
+  // 3. Simple Google Login (No Paywall)
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error("Login failed:", error);
     }
-
-    const options = {
-      key: "rzp_test_YourActualKeyHere", // 🔴 PASTE YOUR TEST KEY HERE!
-      amount: "9900", // ₹99.00
-      currency: "INR",
-      name: "Job Tracker Pro",
-      description: "Unlock Cloud Sync & Account Access",
-      theme: { color: "#6366f1" },
-      handler: async function (response) {
-        console.log("Payment Success ID:", response.razorpay_payment_id);
-
-        // Payment Success -> Trigger Google Login!
-        try {
-          await signInWithPopup(auth, googleProvider);
-          alert(
-            "Payment successful! Welcome to Pro. Your data is now syncing to the cloud.",
-          );
-        } catch (error) {
-          console.error("Login failed after payment:", error);
-        }
-      },
-      prefill: {
-        name: "Hiring Manager",
-        email: "recruiter@example.com",
-        contact: "9999999999",
-      },
-    };
-
-    const paymentObject = new window.Razorpay(options);
-    paymentObject.open();
   };
 
   const allCompanies = useMemo(() => {
@@ -181,20 +140,19 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
-      {/* 4. Pass User and Paywall Login to Navbar */}
+      {/* Pass the simple handleLogin to Navbar */}
       <Navbar
         allCompanies={allCompanies}
         trackerData={trackerData}
         onRestoreData={handleRestoreData}
         onResetData={handleResetData}
         user={user}
-        onLogin={handleLoginWithPaywall}
+        onLogin={handleLogin}
         onLogout={() => auth.signOut()}
       />
 
       <HeroStats allCompanies={allCompanies} trackerData={trackerData} />
 
-      {/* 5. The Gateway is gone. The app is open to everyone! */}
       <main className="flex-grow">
         <Tracker
           allCompanies={allCompanies}
