@@ -103,7 +103,7 @@ export default function PremiumUpgrade({ onUnlockSuccess }) {
         </button>
 
         <p className="text-[10px] text-slate-500 mt-4 uppercase tracking-widest font-semibold">
-          Test Mode Enabled
+          Pro Mode Enabled
         </p>
       </div>
     </div>
