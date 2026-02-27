@@ -50,7 +50,12 @@ export default function App() {
         } catch (error) {
           console.error("Error fetching cloud data:", error);
         }
+      } else {
+        // 🔴 FIX: WHEN USER SIGNS OUT, WIPE THE SCREEN DATA!
+        setTrackerData({});
+        setCustomCompanies([]);
       }
+
       setIsCheckingAuth(false);
     });
     return () => unsubscribe();
@@ -69,7 +74,7 @@ export default function App() {
     }
   };
 
-  // 3. Simple Google Login (No Paywall)
+  // 3. Simple Google Login
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
@@ -140,7 +145,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50">
-      {/* Pass the simple handleLogin to Navbar */}
       <Navbar
         allCompanies={allCompanies}
         trackerData={trackerData}
@@ -154,13 +158,47 @@ export default function App() {
       <HeroStats allCompanies={allCompanies} trackerData={trackerData} />
 
       <main className="flex-grow">
-        <Tracker
-          allCompanies={allCompanies}
-          trackerData={trackerData}
-          onUpdateTracker={handleUpdateTracker}
-          setCustomCompanies={handleAddCustomCompany}
-          onDeleteCustomCompany={handleDeleteCustomCompany}
-        />
+        {/* 🔴 FIX: THE TRACKER IS NOW LOCKED BEHIND LOGIN! */}
+        {user ? (
+          <Tracker
+            allCompanies={allCompanies}
+            trackerData={trackerData}
+            onUpdateTracker={handleUpdateTracker}
+            setCustomCompanies={handleAddCustomCompany}
+            onDeleteCustomCompany={handleDeleteCustomCompany}
+          />
+        ) : (
+          <section id="tracker" className="max-w-[1400px] mx-auto px-6 py-16">
+            <div className="bg-white rounded-3xl border border-stone-200 shadow-xl shadow-stone-200/50 py-20 px-6 text-center relative overflow-hidden flex flex-col items-center justify-center">
+              {/* Decorative background blur */}
+              <div className="absolute top-[-50px] right-[-50px] w-64 h-64 bg-amber-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+              <div className="w-20 h-20 bg-stone-50 text-stone-300 rounded-2xl flex items-center justify-center mb-6 border border-stone-200 shadow-inner relative z-10">
+                <i className="fas fa-lock text-3xl"></i>
+              </div>
+
+              <h2 className="text-3xl font-display font-black text-slate-800 mb-3 relative z-10">
+                Company Tracker Locked
+              </h2>
+
+              <p className="text-stone-500 mb-8 max-w-lg mx-auto font-medium relative z-10">
+                Sign in with Google to access the full database of 550+
+                companies, track your job applications, add custom leads, and
+                securely sync your progress to the cloud.
+              </p>
+
+              <button
+                onClick={handleLogin}
+                className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-slate-300 hover:-translate-y-1 transition-all flex items-center gap-3 relative z-10 cursor-pointer"
+              >
+                <i className="fab fa-google text-amber-400 text-lg"></i>
+                Unlock Company Database
+              </button>
+            </div>
+          </section>
+        )}
+
+        {/* These tools are free for everyone to use! */}
         <CareerTools />
         <MarketCharts allCompanies={allCompanies} />
       </main>
